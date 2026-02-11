@@ -5,7 +5,7 @@ import json
 # 1. Configuración
 # Debes buscar tu lector en /dev/input/by-id/ o usar /dev/input/eventX
 # El comando 'ls /dev/input/by-id/' te ayudará a identificarlo
-DEVICE_PATH = '/dev/input/by-id/TU_LECTOR_USB_AQUI' 
+DEVICE_PATH = '/dev/input/by-id/usb-0581_011c-event-kbd'
 API_URL = "http://localhost:3006/escanear"
 
 def main():
