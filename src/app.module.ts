@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppService } from './app.service';
 import { AppController } from './app.controller'; // <--- IMPORTANTE: Importar el controlador
-import { ProductList, AvailableProduct, SalesProduct } from './entities/product.entity';
+import { ProductList, AvailableProduct, SalesProduct, Fail } from './entities/product.entity';
 
 @Module({
   imports: [
@@ -13,10 +13,10 @@ import { ProductList, AvailableProduct, SalesProduct } from './entities/product.
       username: 'user',
       password: 'password',
       database: 'LectorPB',
-      entities: [ProductList, AvailableProduct, SalesProduct],
+      entities: [ProductList, AvailableProduct, SalesProduct, Fail],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([ProductList, AvailableProduct, SalesProduct]),
+    TypeOrmModule.forFeature([ProductList, AvailableProduct, SalesProduct, Fail]),
   ],
   controllers: [AppController], // <--- IMPORTANTE: Agregar el controlador aquí
   providers: [AppService],

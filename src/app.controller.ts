@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
 
-@Controller('/') // Ponemos la barra explícita
+@Controller('/')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
@@ -11,8 +11,7 @@ export class AppController {
   }
 
   @Post('escanear')
-async recibirEscaneo(@Body('codigo') codigo: string) {
-  // Llamamos a la misma lógica que usábamos en la terminal
-  return await this.appService.handleBarcode(codigo);
-}
+  async recibirEscaneo(@Body('codigo') codigo: string) {
+    return await this.appService.handleBarcode(codigo);
+  }
 }

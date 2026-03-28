@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ProductList, AvailableProduct, SalesProduct } from './entities/product.entity';
+import { ProductList, AvailableProduct, SalesProduct, Fail } from './entities/product.entity';
 import * as readline from 'readline';
 
 @Injectable()
@@ -13,15 +13,14 @@ export class AppService implements OnModuleInit {
     @InjectRepository(ProductList) private listRepo: Repository<ProductList>,
     @InjectRepository(AvailableProduct) private availableRepo: Repository<AvailableProduct>,
     @InjectRepository(SalesProduct) private salesRepo: Repository<SalesProduct>,
+    @InjectRepository(Fail) private failsRepo: Repository<Fail>,
   ) {}
 
   async onModuleInit() {
-    await this.seedDatabase();
     this.startTerminalListener();
     this.setupSystemSignals();
   }
 
-  // --- FUNCIÓN QUE TE FALTABA ---
   toggleMode(): string {
     this.mode = this.mode === 'VENTAS' ? 'REGISTRO' : 'VENTAS';
     const msg = `[CAMBIO] Modo actualizado a: ${this.mode}`;
@@ -30,7 +29,6 @@ export class AppService implements OnModuleInit {
   }
 
   private setupSystemSignals() {
-    // Esto permite cambiar el modo con: docker kill --signal=SIGUSR1 nest_backend
     process.on('SIGUSR1', () => {
       this.toggleMode();
     });
@@ -70,44 +68,66 @@ export class AppService implements OnModuleInit {
           let available = await this.availableRepo.findOneBy({ codigo });
           if (available) {
             available.stock += 1;
+            // fecha_hora se actualiza automáticamente por onUpdate
           } else {
             available = this.availableRepo.create({ 
               codigo, 
-              nombre: productInList.nombre, 
-              stock: 1 
+              nombre: productInList.nombre,
+              talla: productInList.talla,
+              color: productInList.color,
+              precio_compra: productInList.precio_compra,
+              precio_venta: productInList.precio_venta,
+              stock: 1,
+              // fecha_hora default a CURRENT_TIMESTAMP
             });
           }
           await this.availableRepo.save(available);
           console.log(`[OK - REGISTRO] ${productInList.nombre} | Nuevo Stock: ${available.stock}`);
+          return { status: 'OK', message: 'Registrado' };
         } else {
+          const fail = this.failsRepo.create({ 
+            codigo, 
+            descripcion: 'Código no existe en product_list',
+            // fecha_hora default
+          });
+          await this.failsRepo.save(fail);
           console.error(`[ERROR] Código ${codigo} no existe en PRODUCT_LIST`);
+          return { status: 'ERROR', message: 'Código no existe' };
         }
 
-      } else {
+      } else { // MODO VENTAS
         const available = await this.availableRepo.findOneBy({ codigo });
         
         if (available && available.stock > 0) {
           available.stock -= 1;
           await this.availableRepo.save(available);
           
-          const sale = this.salesRepo.create({ codigo, nombre: available.nombre });
+          const sale = this.salesRepo.create({ 
+            codigo, 
+            nombre: available.nombre,
+            talla: available.talla,
+            color: available.color,
+            precio_venta: available.precio_venta,
+            // fecha_hora default
+          });
           await this.salesRepo.save(sale);
           
           console.log(`[OK - VENTA] ${available.nombre} | Restantes: ${available.stock}`);
+          return { status: 'OK', message: 'Vendido' };
         } else {
+          const fail = this.failsRepo.create({ 
+            codigo, 
+            descripcion: available ? 'Sin stock disponible' : 'Producto no registrado en available_products',
+            // fecha_hora default
+          });
+          await this.failsRepo.save(fail);
           console.error(`[ERROR] Sin stock o producto no registrado: ${codigo}`);
+          return { status: 'ERROR', message: 'Sin stock o no registrado' };
         }
       }
     } catch (error) {
       this.logger.error('Error procesando código', error);
-    }
-  }
-
-  private async seedDatabase() {
-    const count = await this.listRepo.count();
-    if (count === 0) {
-      await this.listRepo.save({ codigo: '01206726', nombre: 'prueba' });
-      this.logger.log('Producto inicial "prueba" creado en la lista maestra.');
+      return { status: 'ERROR', message: 'Error interno' };
     }
   }
 }
