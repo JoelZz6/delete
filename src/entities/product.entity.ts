@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('product_list')
 export class ProductList {
@@ -50,7 +50,10 @@ export class AvailableProduct {
 
 @Entity('sales_products')
 export class SalesProduct {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
   codigo: string;
 
   @Column()
@@ -71,8 +74,11 @@ export class SalesProduct {
 
 @Entity('fails')
 export class Fail {
-  @PrimaryColumn()
-  codigo: string;
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  codigo: string;          
 
   @Column()
   descripcion: string;
