@@ -66,6 +66,9 @@ export class SalesProduct {
   color: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
+  precio_compra: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   precio_venta: number;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })

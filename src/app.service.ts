@@ -107,6 +107,7 @@ export class AppService implements OnModuleInit {
             nombre: available.nombre,
             talla: available.talla,
             color: available.color,
+	    precio_compra: available.precio_compra,
             precio_venta: available.precio_venta,
             // fecha_hora default
           });
